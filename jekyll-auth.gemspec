@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.add_dependency("jekyll", "~> 2.0")
   s.add_dependency("sinatra-index", "~> 0.0")
   s.add_dependency("sinatra_auth_github", "~> 1.0")
-  s.add_dependency("commander", "~> 4.1")
+  s.add_dependency("mercenary", "~> 0.3")
   s.add_dependency("heroku", "~> 3.6")
   s.add_dependency("git", "~> 1.2")
   s.add_dependency("dotenv", "~> 0.11")
