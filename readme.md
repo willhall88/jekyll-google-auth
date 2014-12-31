@@ -1,31 +1,28 @@
-# Jekyll Auth
+# Jekyll Google Auth
 
-*A simple way to use GitHub OAuth to serve a protected jekyll site to your GitHub organization*
+*A simple way to use Google OAuth2 to serve a protected jekyll site to users within an email domain*
 
-[![Gem Version](https://badge.fury.io/rb/jekyll-auth.png)](http://badge.fury.io/rb/jekyll-auth) [![Build Status](https://travis-ci.org/benbalter/jekyll-auth.png?branch=master)](https://travis-ci.org/benbalter/jekyll-auth)
-
+**NOTE: This repo is a fork of [benbalter/jekyll-auth](https://github.com/benbalter/jekyll-auth), with GitHub replaced by Google OAuth2, using 
+[apcj/sinatra-google-auth](https://github.com/apcj/sinatra-google-auth) (forked from [csquared/sinatra-google-auth](https://github.com/csquared/sinatra-google-auth)) and [zquestz/omniauth-google-oauth2](https://github.com/zquestz/omniauth-google-oauth2).**
+ 
 ## The problem
 
 [Jekyll](http://github.com/mojombo/jekyll) and [GitHub Pages](http://pages.github.com) are awesome, right? Static site, lightning fast, everything versioned in Git. What else could you ask for?
 
-But what if you only want to share that site with a select number of people? Before, you were SOL. Now, simply host the site on a free, [Heroku](http://heroku.com) Dyno, and whenever someone tries to access it, it will oauth them against GitHub, and make sure they're a member of your Organization. Pretty cool, huh?
+But what if you only want to share that site with people in your company? Before, you were SOL. Now, simply host the site on a free, [Heroku](http://heroku.com) Dyno, and whenever someone tries to access it, it will oauth them against Google, and make sure their username has the right domain. Pretty cool, huh?
 
 ## Requirements
 
-1. A GitHub account (one per user)
-2. A GitHub Organization (of which members will have access to the Jekyll site)
-3. A GitHub Application (You can always [register one](https://github.com/settings/applications/new) for free)
-4. A heroku account
+1. You trust that people with a google account matching your domain are really members 
+   of your organisation, and therefore should be able to see the site.
+2. A Google Application (You can always [register one](https://console.developers.google.com/project) for free)
+3. A heroku account
 
 ## Getting Started
 
-### Create a GitHub Application
+### Create a Google Application
 
-1. Navigate to [the GitHub app registration page](https://github.com/settings/applications/new)
-2. Give your app a name
-3. Tell GitHub the URL you want the app to eventually live at
-4. The Callback Url is your apps's URL + `/auth/github/callback`
-5. Hit Save, but leave the page open, you'll need some of the information in a moment
+Follow instructions at [omniauth-google-oauth2](https://github.com/zquestz/omniauth-google-oauth2#google-api-setup).
 
 ### Add Jekyll Auth to your site
 
@@ -34,7 +31,8 @@ First, add `gem 'jekyll-auth'` to your `Gemfile` or if you don't already have a 
 ```
 source "https://rubygems.org"
 
-gem 'jekyll-auth'
+gem 'jekyll-auth', :git => 'https://github.com/apcj/jekyll-google-auth.git'
+gem 'sinatra-google-auth', :git => 'https://github.com/apcj/sinatra-google-auth.git'
 ```
 
 Next, `cd` into your project's directory and run `bundle install`.
@@ -80,9 +78,9 @@ Just run `jekyll serve` as you would normally
 
 ### With authentication
 
-1. `export GITHUB_CLIENT_ID=[your github app client id]`
-2. `export GITHUB_CLIENT_SECRET=[your github app client secret]`
-3. `export GITHUB_ORG_ID=[org id]` or `export GITHUB_TEAM_ID=[team id]` or `export GITHUB_TEAM_IDS=1234,5678`
+1. `export GOOGLE_CLIENT_ID=[your Google app client id]`
+2. `export GOOGLE_CLIENT_SECRET=[your Google app client secret]`
+3. `export GOOGLE_EMAIL_DOMAIN=[email domain]`
 4. `jekyll-auth serve`
 
 *Pro-tip #1:* For sanity sake, and to avoid problems with your callback URL, you may want to have two apps, one with a local oauth callback, and one for production if you're going to be testing auth locally.
@@ -90,24 +88,21 @@ Just run `jekyll serve` as you would normally
 *Pro-tip #2*: Jekyll Auth supports [dotenv](https://github.com/bkeepers/dotenv) out of the box. You can create a `.env` file in the root of site and add your configuration variables there. It's ignored by `.gitignore` if you use `jekyll-auth new`, but be sure not to accidentally commit your `.env` file. Here's what your `.env` file might look like:
 
 ```
-GITHUB_CLIENT_SECRET=abcdefghijklmnopqrstuvwxyz0123456789
-GITHUB_CLIENT_ID=qwertyuiop0001
-GITHUB_TEAM_ID=12345
+GOOGLE_CLIENT_SECRET=abcdefghijklmnopqrstuvwxyz0123456789
+GOOGLE_CLIENT_ID=qwertyuiop0001
+GOOGLE_EMAIL_DOMAIN=example.com
 ```
 
 ## Under the hood
 
-Every time you push to Heroku, we take advantage of the fact that Heroku automatically runs the `rake assets:precompile` command (normally used for Rails sites) to build our Jekyll site and store it statically, just like GitHub pages would.
+Every time you push to Heroku, we take advantage of the fact that Heroku 
+automatically runs the `rake assets:precompile` command (normally used 
+for Rails sites) to build our Jekyll site and store it statically, 
+just like GitHub pages would.
 
-Anytime a request comes in for a page, we run it through [Sinatra](http://www.sinatrarb.com/) (using the `_site` folder as the static file folder, just as `public` would be normally), and authenticate it using [sinatra_auth_github](https://github.com/atmos/sinatra_auth_github).
+Anytime a request comes in for a page, we run it through 
+[Sinatra](http://www.sinatrarb.com/) (using the `_site` folder as the static 
+file folder, just as `public` would be normally), and authenticate it using [apcj/sinatra-google-auth](https://github.com/apcj/sinatra-google-auth).
 
-If they're in the org, they get the page. Otherwise, all they ever get is [the bouncer](http://octodex.github.com/bouncer/).
-
-## Upgrading from Jekyll Auth < 0.1.0
-
-1. `cd` to your project directory
-2. `rm config.ru`
-3. `rm Procfile`
-4. Remove any Jekyll Auth specific requirements from your `Gemfile`
-5. Follow [the instructions above](https://github.com/benbalter/jekyll-auth#add-jekyll-auth-to-your-site) to get started
-6. When prompted, select "n" if Heroku is already set up
+If they have the correct, they get the page. Otherwise, all they get bounced 
+back to Google, where they might be able to log in with an appropriate user.

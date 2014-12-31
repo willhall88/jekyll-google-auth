@@ -14,7 +14,7 @@ def changed?
 end
 
 program :version, JekyllAuth::VERSION
-program :description, 'A simple way to use Github Oauth to serve a protected jekyll site to your GitHub organization'
+program :description, 'A simple way to use Google OAuth2 to serve a protected jekyll site to users within an email domain'
 
 command :new do |c|
   c.syntax = 'jekyll-auth new'
@@ -79,21 +79,16 @@ command :setup do |c|
       end
     end
 
-    say "Awesome. Let's teach Heroku about our GitHub app."
+    say "Awesome. Let's teach Heroku our Google OAuth credentials."
 
     client_id = ask "What's your GitHub Client ID? "
-    sh "heroku config:set GITHUB_CLIENT_ID=#{client_id}"
+    sh "heroku config:set GOOGLE_CLIENT_ID=#{client_id}"
 
     client_secret = ask "What's your GitHub Client Secret? "
-    sh "heroku config:set GITHUB_CLIENT_SECRET=#{client_secret}"
+    sh "heroku config:set GOOGLE_CLIENT_SECRET=#{client_secret}"
 
-    team_id = ask "What's your GitHub Team ID? (you can skip this in favor of an org if you prefer) "
-    if team_id.length > 0
-      sh "heroku config:set GITHUB_TEAM_ID=#{team_id}"
-    else
-      org_id = ask "What's your GitHub Org ID? "
-      sh "heroku config:set GITHUB_ORG_ID=#{org_id}"
-    end
+    email_domain = ask "What email domain do you want to restrict access to? (e.g. example.com)"
+    sh "heroku config:set GOOGLE_EMAIL_DOMAIN=#{team_id}"
 
     say "We're all set. Time to deploy our code to Heroku"
     system "git push heroku master --force"
@@ -110,11 +105,11 @@ command :serve do |c|
   c.description = "Run Jekyll Auth site locally"
   c.action do |args, options|
 
-    # Ensure environmental variables are set
-    ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"].each do |var|
+    # Ensure environment variables are set
+    ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_ID", "GOOGLE_EMAIL_DOMAIN"].each do |var|
       next unless ENV[var].nil?
       say "Whoops. Looks like you forgot to tell Jekyll Auth about your app"
-      say "Be sure to run export GITHUB_CLIENT_ID=[client id], export GITHUB_CLIENT_SECRET=[client secret], and export GITHUB_ORG_ID=[org id] (or GITHUB_TEAM_ID)"
+      say "Be sure to run export GOOGLE_CLIENT_ID=[client id], export GOOGLE_CLIENT_SECRET=[client secret], export GOOGLE_EMAIL_DOMAIN=[domain]"
       say "See the readme for more information on where to find these"
       exit(1)
     end

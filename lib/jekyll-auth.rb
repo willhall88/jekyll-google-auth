@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'sinatra-index'
-require 'sinatra_auth_github'
+require 'sinatra-google-auth'
 require 'rack'
 require 'dotenv'
 require 'safe_yaml'
