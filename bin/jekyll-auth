@@ -53,7 +53,7 @@ command :setup do |c|
       say "Looks like we're missing the Heroku client. Let's see if we can't install it..."
       `wget -qO- https://toolbelt.heroku.com/install.sh | sh`
     end
-    
+
     git = Git.init
     git.add "config.ru"
     git.add "Rakefile"
@@ -81,14 +81,14 @@ command :setup do |c|
 
     say "Awesome. Let's teach Heroku our Google OAuth credentials."
 
-    client_id = ask "What's your GitHub Client ID? "
+    client_id = ask "What's your Google Client ID? "
     sh "heroku config:set GOOGLE_CLIENT_ID=#{client_id}"
 
-    client_secret = ask "What's your GitHub Client Secret? "
+    client_secret = ask "What's your Google Client Secret? "
     sh "heroku config:set GOOGLE_CLIENT_SECRET=#{client_secret}"
 
     email_domain = ask "What email domain do you want to restrict access to? (e.g. example.com)"
-    sh "heroku config:set GOOGLE_EMAIL_DOMAIN=#{team_id}"
+    sh "heroku config:set GOOGLE_EMAIL_DOMAIN=#{email_domain}"
 
     say "We're all set. Time to deploy our code to Heroku"
     system "git push heroku master --force"
